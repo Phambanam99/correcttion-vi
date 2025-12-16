@@ -57,26 +57,61 @@ def refine_text(text: str) -> str:
 
 def refine_text_chunked(text: str, max_words_per_chunk: int = 100) -> str:
     """
-    Refine văn bản dài bằng cách chia thành chunks.
-    Mỗi chunk tối đa max_words_per_chunk từ.
+    Refine văn bản dài bằng cách chia thành chunks theo CÂU.
+    Đảm bảo không cắt giữa câu.
     """
+    import re
+    
     words = text.split()
     
     if len(words) <= max_words_per_chunk:
         return refine_text(text)
     
-    # Chia thành chunks
-    chunks = []
-    for i in range(0, len(words), max_words_per_chunk):
-        chunk = " ".join(words[i:i + max_words_per_chunk])
-        chunks.append(chunk)
+    # Chia theo câu (dấu . ! ? kết thúc)
+    sentences = re.split(r'(?<=[.!?])\s+', text)
     
-    print(f"📦 [ProtonX] Chia thành {len(chunks)} chunks ({max_words_per_chunk} từ/chunk)")
+    # Gom câu thành chunks, mỗi chunk không quá max_words_per_chunk từ
+    chunks = []
+    current_chunk = []
+    current_word_count = 0
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+            
+        sentence_word_count = len(sentence.split())
+        
+        # Nếu 1 câu đã quá dài → xử lý riêng
+        if sentence_word_count > max_words_per_chunk:
+            # Lưu chunk hiện tại trước
+            if current_chunk:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = []
+                current_word_count = 0
+            # Thêm câu dài như 1 chunk riêng
+            chunks.append(sentence)
+        # Nếu thêm câu này vẫn trong giới hạn
+        elif current_word_count + sentence_word_count <= max_words_per_chunk:
+            current_chunk.append(sentence)
+            current_word_count += sentence_word_count
+        # Nếu thêm câu này vượt giới hạn → tạo chunk mới
+        else:
+            if current_chunk:
+                chunks.append(" ".join(current_chunk))
+            current_chunk = [sentence]
+            current_word_count = sentence_word_count
+    
+    # Thêm chunk cuối cùng
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    
+    print(f"📦 [ProtonX] Chia thành {len(chunks)} chunks (theo câu, max {max_words_per_chunk} từ/chunk)")
     
     # Xử lý từng chunk
     refined_chunks = []
     for idx, chunk in enumerate(chunks, 1):
-        print(f"  🔷 ProtonX Chunk [{idx}/{len(chunks)}]")
+        print(f"  🔷 ProtonX Chunk [{idx}/{len(chunks)}]: {len(chunk.split())} từ")
         refined_chunk = refine_text(chunk)
         refined_chunks.append(refined_chunk)
     
@@ -84,3 +119,4 @@ def refine_text_chunked(text: str, max_words_per_chunk: int = 100) -> str:
     result = " ".join(refined_chunks)
     
     return result
+

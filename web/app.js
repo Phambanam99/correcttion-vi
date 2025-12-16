@@ -28,6 +28,7 @@ const elements = {
     btnClearLog: document.getElementById('btn-clear-log'),
     btnUpload: document.getElementById('btn-upload'),
     btnDownload: document.getElementById('btn-download'),
+    btnCorrectDocx: document.getElementById('btn-correct-docx'),
     fileInput: document.getElementById('file-input'),
     modelSelect: document.getElementById('model-select')
 };
@@ -413,6 +414,72 @@ async function handleDownload() {
     }
 }
 
+// Upload and correct DOCX with comments
+async function handleCorrectDocx() {
+    // Create a temporary file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.docx';
+
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.endsWith('.docx')) {
+            alert('Chỉ hỗ trợ file .docx!');
+            return;
+        }
+
+        const selectedModel = elements.modelSelect.value;
+        const modelNames = {
+            'bartpho': 'BartPho',
+            'qwen': 'Qwen',
+            'vistral': 'Vistral'
+        };
+
+        showLoading(true, `Đang xử lý file ${file.name} với ${modelNames[selectedModel] || selectedModel}...`);
+        addLog(`📁 Đang tải và xử lý file: ${file.name}`, 'info');
+        addLog(`🤖 Model: ${modelNames[selectedModel] || selectedModel}`, 'info');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('model', selectedModel);
+
+            const response = await fetch(`${API_BASE_URL}/api/correct-docx`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Lỗi xử lý file');
+            }
+
+            // Download the corrected file
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name.replace('.docx', '_corrected.docx');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            addLog(`✅ Đã tải file: ${file.name.replace('.docx', '_corrected.docx')}`, 'success');
+            addLog('📝 File có bao gồm phần tổng kết các thay đổi ở cuối', 'info');
+        } catch (error) {
+            addLog(`❌ Lỗi: ${error.message}`, 'error');
+            alert(`Lỗi xử lý file: ${error.message}`);
+        } finally {
+            showLoading(false);
+        }
+    };
+
+    input.click();
+}
+
 // ================================================
 // Event Listeners
 // ================================================
@@ -424,6 +491,7 @@ elements.btnClear.addEventListener('click', clearAll);
 elements.btnClearLog.addEventListener('click', clearLog);
 elements.btnUpload.addEventListener('click', handleUpload);
 elements.btnDownload.addEventListener('click', handleDownload);
+elements.btnCorrectDocx.addEventListener('click', handleCorrectDocx);
 elements.fileInput.addEventListener('change', handleFileSelected);
 
 // Word count updates

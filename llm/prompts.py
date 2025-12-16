@@ -12,6 +12,7 @@ QUY TẮC QUAN TRỌNG:
 3. KHÔNG đoán bừa - nếu không chắc chắn thì giữ nguyên từ gốc
 4. KHÔNG thêm nội dung mới, KHÔNG thay đổi ý nghĩa
 5. Nếu câu đúng thì giữ nguyên hoàn toàn
+6. kiểm tra kỹ các dấu câu trong tiếng việt
 
 VÍ DỤ (trả về TOÀN BỘ câu đã sửa):
 - Input: "hom qua em di chau Huong" → Output: "Hôm qua em đi chùa Hương"

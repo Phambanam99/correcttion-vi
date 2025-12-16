@@ -4,7 +4,7 @@ Flask API cho Vietnamese Text Corrector
 Pipeline: [BartPho/Qwen/Vistral] -> ProtonX (với chunking)
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import sys
 import os
@@ -381,6 +381,138 @@ def download_docx():
         }), 500
 
 
+@app.route('/api/correct-docx', methods=['POST'])
+def correct_docx():
+    """
+    Upload DOCX, sửa lỗi, và trả về DOCX với comments ghi chú thay đổi.
+    
+    Request: multipart/form-data với file DOCX
+    Response: File DOCX đã sửa (có comments)
+    """
+    try:
+        from docx import Document
+        from docx.shared import Pt, RGBColor
+        from docx.oxml.ns import qn
+        from docx.oxml import OxmlElement
+        import io
+        
+        if 'file' not in request.files:
+            return jsonify({
+                "success": False,
+                "error": "No file uploaded"
+            }), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({
+                "success": False,
+                "error": "No file selected"
+            }), 400
+        
+        if not file.filename.endswith('.docx'):
+            return jsonify({
+                "success": False,
+                "error": "Only .docx files are supported"
+            }), 400
+        
+        # Lấy model từ form data
+        model = request.form.get('model', DEFAULT_MODEL).lower()
+        if model not in AVAILABLE_MODELS:
+            model = DEFAULT_MODEL
+        
+        # Đọc file DOCX
+        doc = Document(io.BytesIO(file.read()))
+        
+        # Tạo document mới với nội dung đã sửa
+        new_doc = Document()
+        changes_log = []
+        
+        for para_idx, para in enumerate(doc.paragraphs):
+            original_text = para.text.strip()
+            
+            if not original_text:
+                # Giữ nguyên paragraph rỗng
+                new_doc.add_paragraph()
+                continue
+            
+            # Sửa lỗi
+            model_fixed, explanation = correct_with_model(original_text, model)
+            final_text = refine_text_chunked(model_fixed, MAX_WORDS_PER_CHUNK)
+            
+            # Thêm paragraph đã sửa
+            new_para = new_doc.add_paragraph(final_text)
+            
+            # Nếu có thay đổi, ghi chú
+            if original_text != final_text:
+                # Thêm comment dạng highlight + chú thích
+                change_note = f"[Đã sửa] Gốc: {original_text[:100]}..." if len(original_text) > 100 else f"[Đã sửa] Gốc: {original_text}"
+                changes_log.append({
+                    "paragraph": para_idx + 1,
+                    "original": original_text,
+                    "corrected": final_text,
+                    "explanation": explanation
+                })
+        
+        # Thêm phần tổng kết thay đổi ở cuối
+        if changes_log:
+            new_doc.add_paragraph()
+            summary_para = new_doc.add_paragraph()
+            summary_run = summary_para.add_run("═══ TỔNG KẾT CÁC THAY ĐỔI ═══")
+            summary_run.bold = True
+            summary_run.font.size = Pt(14)
+            summary_run.font.color.rgb = RGBColor(0, 102, 204)
+            
+            for change in changes_log:
+                new_doc.add_paragraph()
+                
+                # Tiêu đề đoạn
+                title_para = new_doc.add_paragraph()
+                title_run = title_para.add_run(f"📍 Đoạn {change['paragraph']}:")
+                title_run.bold = True
+                
+                # Văn bản gốc
+                orig_para = new_doc.add_paragraph()
+                orig_run = orig_para.add_run("❌ Gốc: ")
+                orig_run.font.color.rgb = RGBColor(204, 0, 0)
+                orig_para.add_run(change['original'][:200] + "..." if len(change['original']) > 200 else change['original'])
+                
+                # Văn bản đã sửa
+                corr_para = new_doc.add_paragraph()
+                corr_run = corr_para.add_run("✅ Sửa: ")
+                corr_run.font.color.rgb = RGBColor(0, 153, 0)
+                corr_para.add_run(change['corrected'][:200] + "..." if len(change['corrected']) > 200 else change['corrected'])
+                
+                # Giải thích
+                if change['explanation']:
+                    exp_para = new_doc.add_paragraph()
+                    exp_run = exp_para.add_run("💬 Chú thích: ")
+                    exp_run.italic = True
+                    exp_para.add_run(change['explanation'])
+        
+        # Lưu vào buffer
+        buffer = io.BytesIO()
+        new_doc.save(buffer)
+        buffer.seek(0)
+        
+        # Tạo tên file output
+        output_filename = file.filename.replace('.docx', '_corrected.docx')
+        
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=output_filename,
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
 if __name__ == '__main__':
     print("🚀 Starting Vietnamese Text Corrector API...")
     print("📍 API running at: http://localhost:5000")
@@ -390,6 +522,8 @@ if __name__ == '__main__':
     print("   POST /api/correct-paragraphs - Correct multiple paragraphs")
     print("   POST /api/upload-docx - Upload DOCX file")
     print("   POST /api/download-docx - Download as DOCX")
+    print("   POST /api/correct-docx - Upload & correct DOCX with comments")
     print("=" * 50)
     
     app.run(host='0.0.0.0', port=5000, debug=False)
+
