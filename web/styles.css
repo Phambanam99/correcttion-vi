@@ -151,17 +151,6 @@ body {
     background: var(--pink);
 }
 
-.btn-accent {
-    background: var(--peach);
-    color: var(--bg-base);
-}
-
-.btn-accent:hover {
-    background: var(--yellow);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;

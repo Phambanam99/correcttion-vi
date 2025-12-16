@@ -1,4 +1,4 @@
-MODEL_NAME = "Qwen/Qwen3-4B-Thinking-2507"
+MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
 
 MAX_NEW_TOKENS = 512
 TEMPERATURE = 0.1
