@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📝 Vietnamese Text Corrector</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📝 Vietnamese Text Corrector</h1>
+            <p class="subtitle">Sửa lỗi chính tả tiếng Việt với AI (BartPho + ProtonX)</p>
+        </header>
+
+        <!-- Buttons Panel -->
+        <div class="buttons-panel">
+            <!-- File Upload (Hidden input) -->
+            <input type="file" id="file-input" accept=".docx" hidden>
+
+            <button class="btn btn-secondary" id="btn-upload">
+                <span class="icon">📂</span> Mở File DOCX
+            </button>
+
+            <!-- Model Selector -->
+            <div class="model-selector">
+                <label for="model-select">🤖 Model:</label>
+                <select id="model-select">
+                    <option value="bartpho">BartPho (Nhanh)</option>
+                    <option value="qwen">Qwen 2.5 (Thông minh)</option>
+                    <option value="vistral">Vistral 7B (Việt)</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" id="btn-process">
+                <span class="icon">▶️</span> Sửa lỗi
+            </button>
+            <button class="btn btn-secondary" id="btn-paste">
+                <span class="icon">📋</span> Dán từ clipboard
+            </button>
+            <button class="btn btn-secondary" id="btn-copy">
+                <span class="icon">📄</span> Copy kết quả
+            </button>
+            <button class="btn btn-secondary" id="btn-download">
+                <span class="icon">💾</span> Tải DOCX
+            </button>
+            <button class="btn btn-danger" id="btn-clear">
+                <span class="icon">🗑️</span> Xóa
+            </button>
+            <div class="status-indicator" id="status">
+                <span class="status-dot"></span>
+                <span class="status-text">Sẵn sàng</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Text Areas -->
+            <div class="text-panels">
+                <!-- Input -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>📥 VĂN BẢN GỐC</h2>
+                        <span class="word-count" id="input-count">0 từ</span>
+                    </div>
+                    <textarea id="input-text"
+                        placeholder="Dán văn bản cần sửa vào đây...&#10;&#10;Ví dụ: hom qua em di chua Huong"></textarea>
+                </div>
+
+                <!-- Output -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>📤 ĐÃ CHỈNH SỬA</h2>
+                        <span class="word-count" id="output-count">0 từ</span>
+                    </div>
+                    <textarea id="output-text" placeholder="Kết quả sau khi sửa sẽ hiển thị ở đây..."
+                        readonly></textarea>
+                </div>
+            </div>
+
+            <!-- Changes Table -->
+            <div class="changes-section">
+                <div class="panel-header">
+                    <h2>🔄 CÁC THAY ĐỔI</h2>
+                    <span class="badge" id="changes-count">0</span>
+                </div>
+                <div class="table-container">
+                    <table id="changes-table">
+                        <thead>
+                            <tr>
+                                <th width="50">#</th>
+                                <th>❌ TRƯỚC</th>
+                                <th>✅ SAU</th>
+                            </tr>
+                        </thead>
+                        <tbody id="changes-body">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="empty-state">
+                        <span>Chưa có thay đổi nào</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation Panel -->
+            <div class="explanation-section">
+                <div class="panel-header">
+                    <h2>💬 CHÚ THÍCH / GIẢI THÍCH</h2>
+                </div>
+                <div class="explanation-content" id="explanation">
+                    Click vào một dòng trong bảng "CÁC THAY ĐỔI" để xem giải thích...
+                </div>
+            </div>
+
+            <!-- Log Panel -->
+            <div class="log-section">
+                <div class="panel-header">
+                    <h2>📋 LOG</h2>
+                    <button class="btn-small" id="btn-clear-log">Xóa log</button>
+                </div>
+                <div class="log-content" id="log">
+                    <div class="log-entry">🚀 Sẵn sàng sửa lỗi văn bản...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Đang xử lý...</div>
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

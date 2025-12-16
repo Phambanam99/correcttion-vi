@@ -7,3 +7,6 @@ python-docx>=1.1.0
 lxml>=5.0.0
 
 protonx
+
+# GUI Desktop App
+PyQt5>=5.15.0
