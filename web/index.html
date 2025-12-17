@@ -14,7 +14,7 @@
         <!-- Header -->
         <header class="header">
             <h1>📝 Vietnamese Text Corrector</h1>
-            <p class="subtitle">Sửa lỗi chính tả tiếng Việt với AI (BartPho + ProtonX)</p>
+            <p class="subtitle">Sửa lỗi chính tả tiếng Việt với AI (Qwen/BartPho + ProtonX)</p>
         </header>
 
         <!-- Buttons Panel -->
@@ -30,9 +30,32 @@
             <div class="model-selector">
                 <label for="model-select">🤖 Model:</label>
                 <select id="model-select">
-                    <option value="bartpho">BartPho (Nhanh)</option>
-                    <option value="qwen">Qwen 2.5 (Thông minh)</option>
-                    <option value="vistral">Vistral 7B (Việt)</option>
+                    <optgroup label="🖥️ Local Models">
+                        <option value="qwen-qwen2.5-7b">Qwen 2.5-7B (Mặc định)</option>
+                        <option value="qwen-qwen3-8b">Qwen 3-8B</option>
+                        <option value="bartpho">BartPho (Nhanh)</option>
+                        <option value="vistral">Vistral 7B (Việt)</option>
+                    </optgroup>
+                    <optgroup label="🌐 Online (Ollama)">
+                        <option value="" disabled>Loading models...</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Pipeline Selector -->
+            <div class="model-selector">
+                <label for="pipeline-select">🔧 Pipeline:</label>
+                <select id="pipeline-select">
+                    <optgroup label="🖥️ Local">
+                        <option value="qwen_protonx">Qwen + ProtonX</option>
+                        <option value="qwen_only">Qwen only</option>
+                        <option value="protonx_only">ProtonX only</option>
+                        <option value="bartpho_protonx">BartPho + ProtonX</option>
+                    </optgroup>
+                    <optgroup label="🌐 Online">
+                        <option value="ollama_protonx">Ollama + ProtonX</option>
+                        <option value="ollama_only">Ollama only</option>
+                    </optgroup>
                 </select>
             </div>
 

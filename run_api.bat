@@ -5,12 +5,14 @@ echo   Vietnamese Text Corrector - API
 echo ========================================
 echo.
 
-REM Set offline mode - không tải từ internet
-set TRANSFORMERS_OFFLINE=1
-set HF_DATASETS_OFFLINE=1
+REM Fix HuggingFace cache symlinks issue on Windows
+set HF_HOME=C:\Users\System Interlace\.cache\huggingface
+set TRANSFORMERS_CACHE=%HF_HOME%\hub
+set HF_HUB_DISABLE_SYMLINKS_WARNING=1
 
-REM Set HuggingFace cache path (nếu models ở thư mục khác)
-REM set HF_HOME=%~dp0..\models
+REM Uncomment below to use offline mode (sau khi đã tải models)
+REM set TRANSFORMERS_OFFLINE=1
+REM set HF_DATASETS_OFFLINE=1
 
 echo 🚀 Starting API Server...
 echo 📍 API will be available at: http://localhost:5000

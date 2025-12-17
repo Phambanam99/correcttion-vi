@@ -3,19 +3,20 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 MODEL_NAME = "protonx-models/protonx-legal-tc"
 
-# === LOG: Device Info ===
-device = "cpu"  # ProtonX chạy trên CPU
+# === Device Info ===
+device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"🖥️  [ProtonX] Device: {device.upper()}")
+if device == "cuda":
+    print(f"🖥️  [ProtonX] GPU: {torch.cuda.get_device_name(0)}")
 print(f"🖥️  [ProtonX] Model: {MODEL_NAME}")
 print("=" * 50)
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSeq2SeqLM.from_pretrained(
     MODEL_NAME,
-    device_map="cpu",      # RẤT QUAN TRỌNG
-    torch_dtype=torch.float32
+    torch_dtype=torch.float16 if device == "cuda" else torch.float32
 )
-
+model = model.to(device)
 model.eval()
 
 def refine_text(text: str) -> str:
@@ -31,7 +32,7 @@ def refine_text(text: str) -> str:
         return_tensors="pt",
         truncation=True,
         max_length=512
-    )
+    ).to(device)
 
     with torch.no_grad():
         outputs = model.generate(

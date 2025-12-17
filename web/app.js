@@ -30,7 +30,8 @@ const elements = {
     btnDownload: document.getElementById('btn-download'),
     btnCorrectDocx: document.getElementById('btn-correct-docx'),
     fileInput: document.getElementById('file-input'),
-    modelSelect: document.getElementById('model-select')
+    modelSelect: document.getElementById('model-select'),
+    pipelineSelect: document.getElementById('pipeline-select')
 };
 
 // Store results for explanation display
@@ -97,6 +98,15 @@ async function checkHealth() {
         if (data.status === 'ok') {
             setStatus('ready', 'API sẵn sàng');
             addLog('✅ Kết nối API thành công', 'success');
+
+            // Dynamically populate Ollama models
+            if (data.ollama_available && data.ollama_models && data.ollama_models.length > 0) {
+                populateOllamaModels(data.ollama_models);
+                addLog(`🌐 Ollama: ${data.ollama_models.length} models available`, 'info');
+            } else {
+                addLog('⚠️ Ollama API không khả dụng', 'warning');
+            }
+
             return true;
         }
     } catch (error) {
@@ -106,13 +116,35 @@ async function checkHealth() {
     }
 }
 
-async function correctText(text, model = 'bartpho') {
+function populateOllamaModels(models) {
+    // Find or create Ollama optgroup
+    let ollamaGroup = elements.modelSelect.querySelector('optgroup[label*="Ollama"]');
+
+    if (!ollamaGroup) {
+        ollamaGroup = document.createElement('optgroup');
+        ollamaGroup.label = '🌐 Online (Ollama)';
+        elements.modelSelect.appendChild(ollamaGroup);
+    }
+
+    // Clear existing options in the group
+    ollamaGroup.innerHTML = '';
+
+    // Add models from API
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = `ollama-${model}`;
+        option.textContent = `Ollama ${model}`;
+        ollamaGroup.appendChild(option);
+    });
+}
+
+async function correctText(text, model = 'qwen', pipeline = 'qwen_protonx') {
     const response = await fetch(`${API_BASE_URL}/api/correct-paragraphs`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text, model })
+        body: JSON.stringify({ text, model, pipeline })
     });
 
     if (!response.ok) {
@@ -247,31 +279,46 @@ async function handleProcess() {
         return;
     }
 
-    // Get selected model
+    // Get selected model and pipeline
     const selectedModel = elements.modelSelect.value;
+    const selectedPipeline = elements.pipelineSelect.value;
     const modelNames = {
+        'qwen-qwen2.5-7b': 'Qwen 2.5-7B',
+        'qwen-qwen3-8b': 'Qwen 3-8B',
         'bartpho': 'BartPho',
-        'qwen': 'Qwen 2.5',
-        'vistral': 'Vistral 7B'
+        'vistral': 'Vistral 7B',
+        'ollama-qwen2.5:7b': 'Ollama Qwen 2.5:7B',
+        'ollama-qwen2.5:14b': 'Ollama Qwen 2.5:14B',
+        'ollama-llama3.2': 'Ollama Llama 3.2',
+        'ollama-gemma2': 'Ollama Gemma 2'
+    };
+    const pipelineNames = {
+        'qwen_protonx': 'Qwen + ProtonX',
+        'qwen_only': 'Qwen only',
+        'protonx_only': 'ProtonX only',
+        'bartpho_protonx': 'BartPho + ProtonX',
+        'ollama_protonx': 'Ollama + ProtonX',
+        'ollama_only': 'Ollama only'
     };
     const modelName = modelNames[selectedModel] || selectedModel;
+    const pipelineName = pipelineNames[selectedPipeline] || selectedPipeline;
 
     setButtonsEnabled(false);
     setStatus('processing', 'Đang xử lý...');
     showLoading(true, 'Đang gửi yêu cầu đến API...');
 
-    addLog(`📊 Bắt đầu xử lý với model: ${modelName}`, 'info');
+    addLog(`📊 Bắt đầu xử lý với ${modelName} | Pipeline: ${pipelineName}`, 'info');
 
     try {
         const paragraphCount = text.split('\n').filter(p => p.trim()).length;
         showLoading(true, `Đang xử lý ${paragraphCount} đoạn văn với ${modelName}...`);
 
-        const data = await correctText(text, selectedModel);
+        const data = await correctText(text, selectedModel, selectedPipeline);
 
         if (data.success) {
             displayResults(data);
             setStatus('ready', 'Hoàn thành');
-            addLog(`✅ Hoàn thành! Model: ${data.model_used}, ${data.total_paragraphs} đoạn văn`, 'success');
+            addLog(`✅ Hoàn thành! Model: ${data.model_used}, Pipeline: ${data.pipeline_used}, ${data.total_paragraphs} đoạn văn`, 'success');
         } else {
             throw new Error(data.error || 'Unknown error');
         }

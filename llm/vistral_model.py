@@ -63,7 +63,7 @@ Trả lời theo format (CHỈ 1 LẦN, KHÔNG lặp lại):
 (viết đoạn văn đã sửa ở đây)
 
 [GIẢI THÍCH]
-(liệt kê các thay đổi ở đây)
+(liệt kê các thay đổi ở đây một cách ngắn gọn nhất)
 
 Bắt đầu:
 [VĂN BẢN ĐÃ SỬA]

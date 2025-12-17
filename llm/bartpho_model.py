@@ -7,7 +7,7 @@ Model được fine-tune đặc biệt cho sửa lỗi chính tả tiếng Việ
 import torch
 from transformers import AutoTokenizer, MBartForConditionalGeneration
 
-MODEL_NAME = "manhngvu/bartpho-autocorrect-demo-100k"
+MODEL_NAME = "bmd1905/vietnamese-correction-v2"
 
 # === LOG: Device Info ===
 device = "cuda" if torch.cuda.is_available() else "cpu"

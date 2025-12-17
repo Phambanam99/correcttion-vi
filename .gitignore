@@ -17,6 +17,8 @@ dist/
 venv/
 env/
 .venv/
+.myenv/
+.myvenv/
 
 # IDE
 .idea/

@@ -1,7 +1,7 @@
 from docx import Document
 from llm.qwen_model import correct_text
 from protonx_layer.protonx_refine import refine_text
-from processor.diff_utils import generate_change_note
+from processor.diff_utils import generate_change_note, is_meaningful_text
 from processor.track_comment import add_comment
 from config import AUTHOR_NAME
 
@@ -21,6 +21,12 @@ def process_docx(input_path, output_path):
 
         if not original:
             new_doc.add_paragraph("")
+            continue
+        
+        # Kiểm tra đoạn văn có ý nghĩa để xử lý hay không
+        if not is_meaningful_text(original):
+            print(f"⏭️ Bỏ qua đoạn không có ý nghĩa: '{original[:50]}'")
+            new_doc.add_paragraph(original)  # Giữ nguyên đoạn gốc
             continue
 
         para_index += 1
